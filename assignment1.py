@@ -37,9 +37,10 @@ class Assignment1:
                         "refGene.exonCount",
                         "refGene.exonStarts",
                         "refGene.exonEnds"]
+
         
         ## Build query
-        query = "SELECT DISTINCT %s from refGene" % ",".join(query_fields)
+        query = "SELECT DISTINCT {} from refGene where name2 = '{}'".format(",".join(query_fields), self.gene)
         
         ## Execute query
         cursor.execute(query)
