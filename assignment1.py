@@ -1,6 +1,6 @@
 import mysql.connector
 
-__author__ = 'XXX'
+__author__ = 'Anna-Dorothea Gorki'
 
 ##
 ## Concept:
@@ -10,18 +10,19 @@ __author__ = 'XXX'
 
 class Assignment1:
     
-    def __init__(self):
-        ## Your gene of interest
-        self.gene = ""
+    def __init__(self, gene, genome_reference, file):
+        self.gene = gene
+        self.genome_reference = genome_reference
+        self.file_name = file
 
     
-    def download_gene_coordinates(self, genome_reference, file_name):
+    def download_gene_coordinates(self):
         ## TODO concept
         
         print("Connecting to UCSC to fetch data")
         
         ## Open connection
-        cnx = mysql.connector.connect(host='genome-mysql.cse.ucsc.edu', user='genomep', passwd='password', db=genome_reference)
+        cnx = mysql.connector.connect(host='genome-mysql.cse.ucsc.edu', user='genomep', passwd='password', db=self.genome_reference)
         
         ## Get cursor
         cursor = cnx.cursor()
@@ -45,7 +46,7 @@ class Assignment1:
         
         ## Write to file
         ## TODO this may need some work 
-        with open(file_name, "w") as fh:
+        with open(self.file_name, "w") as fh:
             for row in cursor:
                 fh.write(str(row) + "\n")
     
@@ -90,11 +91,14 @@ class Assignment1:
     
     def print_summary(self):
         print("Print all results here")
+        self.download_gene_coordinates()
+
+
     
     
 def main():
     print("Assignment 1")
-    assignment1 = Assignment1()
+    assignment1 = Assignment1("KCNE1", "hg38", "ucsc_file")
     assignment1.print_summary()
     
     
@@ -103,5 +107,4 @@ def main():
         
 if __name__ == '__main__':
     main()
-    
-    
+
