@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 import mysql.connector
 import os
 import pysam
+
 
 __author__ = 'Anna-Dorothea Gorki'
 
@@ -12,10 +14,11 @@ __author__ = 'Anna-Dorothea Gorki'
 
 class Assignment1:
     
-    def __init__(self, gene, genome_reference, file):
+    def __init__(self, gene, genome_reference, file, bamfile):
         self.gene = gene
         self.genome_reference = genome_reference
         self.file_name = file
+        self.bamfile =bamfile
 
     
     def download_gene_coordinates(self):
@@ -72,10 +75,11 @@ class Assignment1:
                 print("There are more than one entry for your gene. The first entry in file will be chosen.")
 
     def get_gene_symbol(self):
+        #Prints gene symbol
         print("Your chosen Genesymbol is: %s" % self.gene)
 
     def get_coordinates_of_gene(self):
-        ## Use UCSC file
+        ## Use UCSC file to get chromosome location and start and stop position of gene of interest
         with open(self.file_name, "r") as f:
             first = f.readline().replace("(", "").replace(")", "")
             self.data= first.split(" ")
@@ -89,24 +93,50 @@ class Assignment1:
               "The length of your gene is: %s bp." % (self.chromosome, self.start, self.stop, length_gene))
 
     def get_sam_header(self):
-        print("todo")
-        
+        #Uses pysam tool to create AlignmentFile from bam file
+        self.samfile = pysam.AlignmentFile(self.bamfile, "rb")
+        header= self.samfile.header
+
+        print(header)
+
     def get_properly_paired_reads_of_gene(self):
-        print("todo")
+        #is_proper_pair is AlignedSemgent attribute
+        self.reads= list(self.samfile.fetch(self.chromosome, int(self.start), int(self.stop)))
+        paired_reads=[i for i in self.reads if i.is_proper_pair]
+
+        print("Number of properly paired reads: %s" % (len(paired_reads)))
         
     def get_gene_reads_with_indels(self):
-        print("todo")
+        #Cigar (Compact Idiosyncratic Gapped Alignment Report), cigartuples is AlignedSegment attribute-->operation1=insertion, operation2=deletion
+        list_indel = []
+        for i in self.reads:
+            if not i.is_unmapped:
+                indels = i.cigartuples
+                for (operation,length) in indels:
+                    if (operation == 1) or (operation == 2):
+                        list_indel.append(i)
+
+        print("Number of reads with indels: %s" % (len(list_indel)))
         
     def calculate_total_average_coverage(self):
+        #calculation of average coverage in all bam file, Chromosome length from header
+
         print("todo")
         
     def calculate_gene_average_coverage(self):
+        #calculating gene average in bam file
         print("todo")
         
     def get_number_mapped_reads(self):
-        print("todo")
+        #get mapped reads by excluding unmapped reads (AlignmentSegment attribute)
+        reads_mapped= 0
+        for i in self.reads:
+            if not i.is_unmapped:
+                reads_mapped= reads_mapped +1
+        print("Number of mapped reads is: %s" % reads_mapped)
 
     def get_region_of_gene(self):
+        #uses exon positions to get regions of gene
         exon_region_start = self.data[7].replace(",", " ").split()
         exon_region_start = [x.strip('\'') for x in exon_region_start]
         exon_region_stop = self.data[8].replace(",", " ").split()
@@ -116,10 +146,10 @@ class Assignment1:
                 print("The region %s goes from %s to %s" % (i, exon_region_stop[i-1], exon_region_start[i-1]))
         
     def get_number_of_exons(self):
+        #output: number of exons in gene of interest
         exon_count = self.data[6].replace(",","")
         print("The gene has %s exons" % exon_count)
-    
-    
+
     def print_summary(self):
         print("Print all results here:")
         self.get_gene_symbol()
@@ -127,13 +157,17 @@ class Assignment1:
         self.get_coordinates_of_gene()
         self.get_number_of_exons()
         self.get_region_of_gene()
+        self.get_sam_header()
+        self.get_properly_paired_reads_of_gene()
+        self.get_number_mapped_reads()
+        self.get_gene_reads_with_indels()
+        self.calculate_total_average_coverage()
+        self.calculate_gene_average_coverage()
 
-
-    
     
 def main():
     print("Assignment 1")
-    assignment1 = Assignment1("PCNT", "hg38", "ucsc_file")
+    assignment1 = Assignment1("PCNT", "hg38", "ucsc_file", "http://hmd.ait.ac.at/medgen2019/chr21.bam")
     assignment1.print_summary()
     
     
