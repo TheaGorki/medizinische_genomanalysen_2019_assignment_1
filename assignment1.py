@@ -1,4 +1,7 @@
 import mysql.connector
+import os
+import csv
+from io import StringIO
 
 __author__ = 'Anna-Dorothea Gorki'
 
@@ -17,54 +20,72 @@ class Assignment1:
 
     
     def download_gene_coordinates(self):
-        ## TODO concept
-        
-        print("Connecting to UCSC to fetch data")
-        
-        ## Open connection
-        cnx = mysql.connector.connect(host='genome-mysql.cse.ucsc.edu', user='genomep', passwd='password', db=self.genome_reference)
-        
-        ## Get cursor
-        cursor = cnx.cursor()
-        
-        ## Build query fields
-        query_fields = ["refGene.name2",
-                        "refGene.name",
-                        "refGene.chrom",
-                        "refGene.txStart",
-                        "refGene.txEnd",
-                        "refGene.strand",
-                        "refGene.exonCount",
-                        "refGene.exonStarts",
-                        "refGene.exonEnds"]
+        ## Uses mySQL to get information about gene of interest
 
-        
-        ## Build query
-        query = "SELECT DISTINCT {} from refGene where name2 = '{}'".format(",".join(query_fields), self.gene)
-        
-        ## Execute query
-        cursor.execute(query)
-        
-        ## Write to file
-        ## TODO this may need some work 
-        with open(self.file_name, "w") as fh:
-            for row in cursor:
-                fh.write(str(row) + "\n")
-    
-            
-        ## Close cursor & connection
-        cursor.close()
-        cnx.close()
-        
-        print("Done fetching data")
-        
+        if os.path.exists(self.file_name) == True:
+            print("Your UCSC File already exists")
+        else:
+            print("Connecting to UCSC to fetch data")
+
+            ## Open connection
+            cnx = mysql.connector.connect(host='genome-mysql.cse.ucsc.edu', user='genomep', passwd='password', db=self.genome_reference)
+
+            ## Get cursor
+            cursor = cnx.cursor()
+
+            ## Build query fields
+            query_fields = ["refGene.name2",
+                            "refGene.name",
+                            "refGene.chrom",
+                            "refGene.txStart",
+                            "refGene.txEnd",
+                            "refGene.strand",
+                            "refGene.exonCount",
+                            "refGene.exonStarts",
+                            "refGene.exonEnds"]
+
+
+            ## Build query
+            #query = "SELECT DISTINCT {} from refGene where name2 = '{}'".format(",".join(query_fields), self.gene)
+            query = "SELECT DISTINCT %s from refGene where name2 = '%s'"% ((",".join(query_fields)), (self.gene))
+
+            ## Execute query
+            cursor.execute(query)
+
+            ## Write to file
+            with open(self.file_name, "w") as fh:
+                for row in cursor:
+                    fh.write(str(row) + "\n")
+
+
+            ## Close cursor & connection
+            cursor.close()
+            cnx.close()
+
+            print("Done fetching data")
+
+        with open(self.file_name, "r") as f:
+            data= f.read()
+            count = data.count(self.gene)
+            if count >1:
+                print("There are more than one entry for your gene. The first entry in file will be chosen")
+
+    def get_gene_symbol(self):
+        print("Your chosen Genesymbol is: %s" % self.gene)
+
     def get_coordinates_of_gene(self):
         ## Use UCSC file
-        print("todo")
-        
-    def get_gene_symbol(self):
-        print("todo")
-                        
+        with open(self.file_name, "r") as f:
+            first = f.readline().replace("(", "").replace(")", "")
+            data= first.split(" ")
+
+        self.start = data[3].replace(",", "")
+        self.stop = data[4].replace(",", "")
+        length_gene= int(self.stop) - int(self.start)
+
+        print("The coordinates of your gene are: %s (start) and %s (stop)."
+              "The length of your gene is: %s bp." % (self.start, self.stop, length_gene))
+
     def get_sam_header(self):
         print("todo")
         
@@ -91,8 +112,10 @@ class Assignment1:
     
     
     def print_summary(self):
-        print("Print all results here")
+        print("Print all results here:")
+        self.get_gene_symbol()
         self.download_gene_coordinates()
+        self.get_coordinates_of_gene()
 
 
     
