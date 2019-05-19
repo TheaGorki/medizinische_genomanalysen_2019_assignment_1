@@ -1,7 +1,6 @@
 import mysql.connector
 import os
-import csv
-from io import StringIO
+import pysam
 
 __author__ = 'Anna-Dorothea Gorki'
 
@@ -46,8 +45,10 @@ class Assignment1:
 
 
             ## Build query
-            #query = "SELECT DISTINCT {} from refGene where name2 = '{}'".format(",".join(query_fields), self.gene)
+
             query = "SELECT DISTINCT %s from refGene where name2 = '%s'"% ((",".join(query_fields)), (self.gene))
+
+            # other solution: query = "SELECT DISTINCT {} from refGene where name2 = '{}'".format(",".join(query_fields), self.gene)
 
             ## Execute query
             cursor.execute(query)
@@ -68,7 +69,7 @@ class Assignment1:
             data= f.read()
             count = data.count(self.gene)
             if count >1:
-                print("There are more than one entry for your gene. The first entry in file will be chosen")
+                print("There are more than one entry for your gene. The first entry in file will be chosen.")
 
     def get_gene_symbol(self):
         print("Your chosen Genesymbol is: %s" % self.gene)
@@ -77,14 +78,15 @@ class Assignment1:
         ## Use UCSC file
         with open(self.file_name, "r") as f:
             first = f.readline().replace("(", "").replace(")", "")
-            data= first.split(" ")
+            self.data= first.split(" ")
 
-        self.start = data[3].replace(",", "")
-        self.stop = data[4].replace(",", "")
+        self.chromosome = self.data[2].replace(",", "").replace("'", "")
+        self.start = self.data[3].replace(",", "")
+        self.stop = self.data[4].replace(",", "")
         length_gene= int(self.stop) - int(self.start)
 
-        print("The coordinates of your gene are: %s (start) and %s (stop)."
-              "The length of your gene is: %s bp." % (self.start, self.stop, length_gene))
+        print("Your gene is located on %s. The coordinates of your gene are: %s (start) and %s (stop)."
+              "The length of your gene is: %s bp." % (self.chromosome, self.start, self.stop, length_gene))
 
     def get_sam_header(self):
         print("todo")
@@ -105,10 +107,17 @@ class Assignment1:
         print("todo")
 
     def get_region_of_gene(self):
-        print("todo")
+        exon_region_start = self.data[7].replace(",", " ").split()
+        exon_region_start = [x.strip('\'') for x in exon_region_start]
+        exon_region_stop = self.data[8].replace(",", " ").split()
+        exon_region_stop = [x.strip('\'') for x in exon_region_stop]
+
+        for i in range(1,len(exon_region_start)):
+                print("The region %s goes from %s to %s" % (i, exon_region_stop[i-1], exon_region_start[i-1]))
         
     def get_number_of_exons(self):
-        print("ads")
+        exon_count = self.data[6].replace(",","")
+        print("The gene has %s exons" % exon_count)
     
     
     def print_summary(self):
@@ -116,13 +125,15 @@ class Assignment1:
         self.get_gene_symbol()
         self.download_gene_coordinates()
         self.get_coordinates_of_gene()
+        self.get_number_of_exons()
+        self.get_region_of_gene()
 
 
     
     
 def main():
     print("Assignment 1")
-    assignment1 = Assignment1("KCNE1", "hg38", "ucsc_file")
+    assignment1 = Assignment1("PCNT", "hg38", "ucsc_file")
     assignment1.print_summary()
     
     
