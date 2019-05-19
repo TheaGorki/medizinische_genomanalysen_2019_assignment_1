@@ -8,7 +8,7 @@ __author__ = 'Anna-Dorothea Gorki'
 
 ##
 ## Concept:
-## TODO
+## Use class Assignment1 with distinct functions to desribe gene of interest
 ##
 
 
@@ -182,8 +182,7 @@ def main():
     print("Assignment 1")
     assignment1 = Assignment1("PCNT", "hg38", "ucsc_file", "http://hmd.ait.ac.at/medgen2019/chr21.bam")
     assignment1.print_summary()
-    
-    
+     
     print("Done with assignment 1")
     
         
