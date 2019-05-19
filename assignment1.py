@@ -93,9 +93,9 @@ class Assignment1:
               "The length of your gene is: %s bp." % (self.chromosome, self.start, self.stop, length_gene))
 
     def get_sam_header(self):
-        #Uses pysam tool to create AlignmentFile from bam file
+        #Uses pysam tool to create AlignmentFile from bam file, complete header with header=self.samfile.header
         self.samfile = pysam.AlignmentFile(self.bamfile, "rb")
-        header= self.samfile.header
+        header= self.samfile.header['HD']
 
         print(header)
 
@@ -120,12 +120,25 @@ class Assignment1:
         
     def calculate_total_average_coverage(self):
         #calculation of average coverage in all bam file, Chromosome length from header
+        sum_coverage = 0
+        total_length = 0
+        for pileupcolumn in self.samfile.pileup():
+            sum_coverage = sum_coverage + pileupcolumn.n
+            total_length = total_length + 1
+        average = sum_coverage / total_length
 
-        print("todo")
+        print("Total average coverage is: %s" % average)
         
     def calculate_gene_average_coverage(self):
-        #calculating gene average in bam file
-        print("todo")
+        #calculating average coverage of gene of interest in bam file
+        gene_length = int(self.stop) - int(self.start)
+        gene_coverage=0
+        for pileupcolumn in self.samfile.pileup(self.chromosome, int(self.start), int(self.stop)):
+            gene_coverage = gene_coverage + pileupcolumn.n
+        gene_average = gene_coverage / gene_length
+
+        print("Gene average coverage is: %s" % gene_average)
+
         
     def get_number_mapped_reads(self):
         #get mapped reads by excluding unmapped reads (AlignmentSegment attribute)
